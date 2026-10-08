@@ -10,7 +10,7 @@
   <script src="game.js" defer></script>
 </head>
 <body>
-  <main class="game-shell">
+  <main id="game-shell" class="game-shell" data-phase="morning">
     <header class="game-header">
       <div class="brand-mark" aria-hidden="true">速</div>
       <div>
@@ -28,13 +28,14 @@
         <p>아침부터 밤까지, 한국어 뜻에 맞는 일본어를 제한 시간 안에 고르면 됩니다.</p>
       </div>
       <div class="rule-grid" aria-label="게임 규칙">
-        <div><strong>10</strong><span>하루의 할 일</span></div>
-        <div><strong>5초</strong><span>문제당 제한 시간</span></div>
+        <div><strong>4종</strong><span>매번 바뀌는 문제</span></div>
+        <div><strong>3~5초</strong><span>민첩한 제한 시간</span></div>
         <div><strong>3회</strong><span>실수하면 종료</span></div>
       </div>
       <div class="how-to-play">
         <h3>조작 방법</h3>
         <p><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> 키 또는 선택지를 클릭·터치하세요.</p>
+        <p class="rush-guide"><strong lang="ja">疾風 모드</strong> · 3연속 정답부터 점수 ×1.5!</p>
       </div>
       <button id="start-button" class="primary-button" type="button">하루 시작하기 <span aria-hidden="true">→</span></button>
     </section>
@@ -49,6 +50,10 @@
           <span>점수</span>
           <strong id="score">0</strong>
         </div>
+        <div class="hud-item hud-combo">
+          <span>연속 정답</span>
+          <strong id="combo">0 COMBO</strong>
+        </div>
         <div class="hud-item hud-lives">
           <span>남은 기회</span>
           <strong id="lives" aria-label="남은 기회 3개">♥ ♥ ♥</strong>
@@ -56,17 +61,34 @@
       </div>
 
       <div class="day-progress" aria-label="하루 진행도">
-        <div class="progress-labels"><span>아침</span><span id="round-count">1 / 10</span><span>밤</span></div>
-        <div class="progress-track"><span id="day-progress-bar"></span></div>
+        <div class="progress-labels"><span>朝 아침</span><span id="round-count">1 / 12</span><span>夜 밤</span></div>
+        <div class="progress-track">
+          <span id="day-progress-bar"></span>
+          <i id="runner" aria-hidden="true">走</i>
+        </div>
       </div>
 
-      <article class="question-card">
-        <p class="prompt-label">이 행동을 일본어로 하면?</p>
+      <article id="question-card" class="question-card">
+        <div class="mission-row">
+          <span id="mission-badge" class="mission-badge">일상 미션</span>
+          <span id="mode-label" class="mode-label">뜻 → 일본어</span>
+        </div>
+        <p id="prompt-label" class="prompt-label">이 행동을 일본어로 하면?</p>
         <h2 id="question">일어나다</h2>
         <p id="question-hint" class="question-hint">알맞은 표현을 골라 주세요.</p>
         <div id="choices" class="choices" aria-label="선택지"></div>
         <p id="feedback" class="feedback" role="status" aria-live="polite">정답을 빠르게 골라 보세요!</p>
       </article>
+
+      <div id="rush-panel" class="rush-panel">
+        <div class="rush-copy">
+          <span><b lang="ja">疾風</b> 민첩 게이지</span>
+          <strong id="rush-status">3연속 정답 시 발동</strong>
+        </div>
+        <div class="rush-track" role="progressbar" aria-label="질풍 모드 게이지" aria-valuemin="0" aria-valuemax="3" aria-valuenow="0">
+          <span id="rush-bar"></span>
+        </div>
+      </div>
 
       <div class="timer-wrap">
         <div class="timer-copy"><span>남은 시간</span><strong id="timer-text">5.0초</strong></div>
@@ -85,6 +107,11 @@
         <span>최종 점수</span>
         <strong id="final-score">0</strong>
         <em id="rank">민첩한 학습자</em>
+      </div>
+      <div class="result-stats" aria-label="플레이 결과">
+        <div><span>정답률</span><strong id="accuracy">0%</strong></div>
+        <div><span>최고 콤보</span><strong id="best-combo">0</strong></div>
+        <div><span><span lang="ja">漢字</span> 표현</span><strong id="kanji-count">0개</strong></div>
       </div>
       <div id="review" class="review"></div>
       <button id="restart-button" class="primary-button" type="button">다시 도전하기 <span aria-hidden="true">↻</span></button>

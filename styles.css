@@ -154,7 +154,7 @@ kbd {
 button:focus-visible { outline: 4px solid var(--yellow); outline-offset: 3px; }
 
 .play-screen { background: linear-gradient(180deg, #f8f5e8 0%, var(--paper) 45%); }
-.hud { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.hud { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
 .hud-item { padding: 12px 15px; border: 1px solid #cbd8cd; border-radius: 12px; background: white; }
 .hud-item span { display: block; color: var(--ink-soft); font-size: 11px; font-weight: 700; }
 .hud-item strong { font-size: 20px; }
@@ -284,4 +284,138 @@ footer strong { color: var(--yellow); }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+}
+
+/* Game variation and agility systems */
+.rush-guide { margin-top: 8px !important; color: var(--green) !important; }
+.rush-guide strong { color: var(--red); }
+
+.game-shell[data-phase="day"] .play-screen {
+  background: linear-gradient(180deg, #edf7dc 0%, var(--paper) 48%);
+}
+.game-shell[data-phase="evening"] .play-screen {
+  background: linear-gradient(180deg, #fde8ca 0%, var(--paper) 48%);
+}
+.game-shell[data-phase="night"] .play-screen {
+  background: linear-gradient(180deg, #dce1eb 0%, var(--paper) 48%);
+}
+
+.hud-combo { text-align: center; }
+.hud-combo strong { color: var(--green); font-size: 16px; }
+.hud-combo.on strong { color: var(--red); }
+
+.progress-track { position: relative; overflow: visible; }
+.progress-track > span { overflow: hidden; }
+#runner {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  left: 0;
+  display: grid;
+  width: 28px;
+  aspect-ratio: 1;
+  place-items: center;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  color: white;
+  background: var(--orange);
+  font-family: "Noto Sans JP", sans-serif;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 900;
+  box-shadow: 0 2px 0 var(--ink);
+  transform: translate(-50%, -50%);
+  transition: left .35s cubic-bezier(.2, .8, .2, 1);
+}
+
+.mission-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 17px;
+}
+.mission-badge, .mode-label {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 5px 10px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 900;
+}
+.mission-badge { color: white; background: var(--green); }
+.mission-badge.quick { color: var(--ink); background: var(--yellow); animation: quickPulse .7s ease-in-out infinite alternate; }
+.mode-label { color: var(--ink-soft); background: var(--green-light); }
+.question-card.quick { box-shadow: 7px 7px 0 var(--yellow); }
+.question-card.rush { border-color: var(--red); box-shadow: 7px 7px 0 #f6cab7; }
+.question-card.pop { animation: cardIn .28s ease-out; }
+
+.choice-main, .choice-sub { display: block; }
+.choice-main { line-height: 1.35; }
+.choice-sub { margin-top: 4px; color: var(--ink-soft); font-size: 11px; font-weight: 600; }
+.choice-button.correct .choice-sub { color: #39735e; }
+.choice-button.wrong .choice-sub { color: #9b4f4a; }
+
+.rush-panel {
+  margin-top: 21px;
+  padding: 13px 15px;
+  border: 1px solid #cbd8cd;
+  border-radius: 12px;
+  background: #f5f8ef;
+  transition: border-color .2s ease, background .2s ease, transform .2s ease;
+}
+.rush-panel.active {
+  border-color: var(--red);
+  background: #fff0df;
+  box-shadow: 0 0 0 3px rgba(235, 118, 88, .13);
+  transform: translateY(-2px);
+}
+.rush-copy { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 11px; }
+.rush-copy span { color: var(--ink-soft); font-weight: 700; }
+.rush-copy b { color: var(--red); font-family: "Noto Sans JP", sans-serif; font-size: 14px; }
+.rush-copy strong { color: var(--ink); }
+.rush-panel.active .rush-copy strong { color: var(--red); }
+.rush-track { height: 8px; overflow: hidden; border-radius: 99px; background: #d9e2d9; }
+.rush-track span { display: block; width: 0; height: 100%; border-radius: inherit; background: var(--orange); transition: width .25s ease; }
+.rush-panel.active .rush-track span { background: linear-gradient(90deg, var(--orange), var(--yellow), var(--orange)); background-size: 200% 100%; animation: rushFlow 1s linear infinite; }
+
+.result-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: -11px 0 22px;
+}
+.result-stats div { padding: 13px 8px; border: 1px solid #cbd8cd; border-radius: 12px; background: white; }
+.result-stats span, .result-stats strong { display: block; }
+.result-stats span { color: var(--ink-soft); font-size: 10px; }
+.result-stats strong { margin-top: 3px; font-size: 18px; }
+.review li strong[lang="ja"] { display: inline-block; margin-right: 4px; font-family: "Noto Sans JP", sans-serif; }
+
+@keyframes cardIn {
+  from { opacity: .5; transform: translateX(16px) scale(.985); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
+}
+@keyframes quickPulse {
+  to { transform: scale(1.05); box-shadow: 0 0 0 4px rgba(247, 200, 75, .2); }
+}
+@keyframes rushFlow {
+  to { background-position: -200% 0; }
+}
+
+@media (max-width: 670px) {
+  .hud { grid-template-columns: repeat(2, 1fr); }
+  .hud-score, .hud-combo { text-align: right; }
+  .hud-lives { text-align: right; }
+}
+
+@media (max-width: 560px) {
+  .mission-row { margin-bottom: 13px; }
+  .result-stats { gap: 6px; }
+  .result-stats strong { font-size: 15px; }
+  .rush-copy { gap: 8px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mission-badge.quick, .rush-panel.active .rush-track span, .question-card.pop { animation: none; }
 }
