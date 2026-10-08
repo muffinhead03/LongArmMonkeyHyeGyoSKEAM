@@ -36,11 +36,26 @@
         <h3>街角 아이템</h3>
         <ul>
           <li><b class="item-speed" lang="ja">速</b><span>질풍 게이지</span></li>
-          <li><b class="item-guard" lang="ja">守</b><span>1회 방어</span></li>
+          <li><b class="item-guard" lang="ja">守</b><span>충돌 방어</span></li>
           <li><b class="item-time" lang="ja">時</b><span>시간 감속</span></li>
           <li><b class="item-luck" lang="ja">福</b><span>보너스 점수</span></li>
+          <li><b class="item-magnet" lang="ja">磁</b><span>아이템 자석</span></li>
+          <li><b class="item-rest" lang="ja">休</b><span>장애물 제거</span></li>
         </ul>
+        <div class="combo-recipes">
+          <strong><span lang="ja">漢字</span> COMBO</strong>
+          <span><b>時 + 速</b> = 時速</span>
+          <span><b>速 + 速</b> = 神速</span>
+          <span><b>守 + 守</b> = 鉄壁</span>
+          <span><b>福 + 福</b> = 大福</span>
+        </div>
       </div>
+
+      <details class="leaderboard-panel start-leaderboard" open>
+        <summary><span lang="en">LEADERBOARD</span> · 이 브라우저 TOP 5</summary>
+        <ol id="start-leaderboard"></ol>
+        <p>랭킹 점수 = 게임 점수 + 최고 콤보 보너스 + 완주 보너스</p>
+      </details>
 
       <div class="controls-guide">
         <div><span>키보드</span><kbd>←</kbd><kbd>→</kbd> 또는 <kbd>A</kbd><kbd>D</kbd></div>
@@ -65,6 +80,7 @@
         <div id="rush-track" class="rush-track" role="progressbar" aria-label="질풍 게이지" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
           <span id="rush-bar"></span>
         </div>
+        <p id="item-chain" class="item-chain">아이템을 연속으로 모으면 한자 조합 발동!</p>
       </div>
 
       <div id="canvas-wrap" class="canvas-wrap">
@@ -95,8 +111,19 @@
         <div><span>하루 진행도</span><strong id="distance">100%</strong></div>
         <div><span>피한 장애물</span><strong id="dodged">0</strong></div>
         <div><span>최고 콤보</span><strong id="best-combo">0</strong></div>
+        <div class="ranking-stat"><span>랭킹 점수</span><strong id="ranking-score">0</strong></div>
       </div>
       <div id="item-result" class="item-result"></div>
+      <section class="score-submit" aria-labelledby="score-submit-title">
+        <h3 id="score-submit-title">LEADERBOARD 등록</h3>
+        <div class="score-form">
+          <label for="player-name">닉네임</label>
+          <input id="player-name" type="text" maxlength="12" value="RUNNER" autocomplete="nickname">
+          <button id="save-score" type="button">기록 저장</button>
+        </div>
+        <p id="save-message" role="status" aria-live="polite">최고 콤보가 높을수록 랭킹 점수가 크게 올라갑니다.</p>
+        <ol id="result-leaderboard" class="result-leaderboard"></ol>
+      </section>
       <button id="restart-button" class="primary-button" type="button">내일 다시 달리기 <span aria-hidden="true">↻</span></button>
     </section>
 

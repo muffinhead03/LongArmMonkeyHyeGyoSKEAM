@@ -14,8 +14,13 @@ const ITEMS = [
   { kanji: '速', name: '스피드', color: '#f17b45', glow: '#ffd34e' },
   { kanji: '守', name: '방어', color: '#4189c7', glow: '#9ed9ff' },
   { kanji: '時', name: '시간', color: '#815ca7', glow: '#d6b7f1' },
-  { kanji: '福', name: '행운', color: '#d99a22', glow: '#ffe08a' }
+  { kanji: '福', name: '행운', color: '#d99a22', glow: '#ffe08a' },
+  { kanji: '磁', name: '자석', color: '#c15a92', glow: '#ffc3e4' },
+  { kanji: '休', name: '휴식', color: '#359b83', glow: '#a8f0d9' }
 ];
+
+const COMBO_WINDOW = 7;
+const LEADERBOARD_KEY = 'ichinichi-dash-leaderboard-v1';
 
 const PHASES = [
   { from: 0, name: 'MORNING', kanji: '朝', top: '#78c5e1', bottom: '#f9ddb0', city: '#6c887e' },
@@ -39,6 +44,7 @@ const rushPanel = document.querySelector('#rush-panel');
 const rushTrack = document.querySelector('#rush-track');
 const rushBar = document.querySelector('#rush-bar');
 const rushStatus = document.querySelector('#rush-status');
+const itemChain = document.querySelector('#item-chain');
 const canvasWrap = document.querySelector('#canvas-wrap');
 const canvas = document.querySelector('#game-canvas');
 const countdown = document.querySelector('#countdown');
@@ -53,7 +59,13 @@ const rank = document.querySelector('#rank');
 const distance = document.querySelector('#distance');
 const dodgedDisplay = document.querySelector('#dodged');
 const bestComboDisplay = document.querySelector('#best-combo');
+const rankingScoreDisplay = document.querySelector('#ranking-score');
 const itemResult = document.querySelector('#item-result');
+const playerName = document.querySelector('#player-name');
+const saveScoreButton = document.querySelector('#save-score');
+const saveMessage = document.querySelector('#save-message');
+const startLeaderboard = document.querySelector('#start-leaderboard');
+const resultLeaderboard = document.querySelector('#result-leaderboard');
 const context = canvas.getContext('2d');
 
 let animationFrame = null;
@@ -74,10 +86,15 @@ let spawnAccumulator = 0;
 let rushMeter = 0;
 let rushUntil = 0;
 let slowUntil = 0;
-let shield = false;
+let shieldCharges = 0;
+let magnetUntil = 0;
 let invincibleUntil = 0;
 let shakeUntil = 0;
-let itemCounts = { '速': 0, '守': 0, '時': 0, '福': 0 };
+let recentItem = null;
+let itemComboCount = 0;
+let rankingScore = 0;
+let scoreSaved = false;
+let itemCounts = { '速': 0, '守': 0, '時': 0, '福': 0, '磁': 0, '休': 0 };
 let currentPhase = PHASES[0];
 
 function showScreen(activeScreen) {
@@ -121,10 +138,19 @@ function startGame() {
   rushMeter = 0;
   rushUntil = 0;
   slowUntil = 0;
-  shield = false;
+  shieldCharges = 0;
+  magnetUntil = 0;
   invincibleUntil = 0;
   shakeUntil = 0;
-  itemCounts = { '速': 0, '守': 0, '時': 0, '福': 0 };
+  recentItem = null;
+  itemComboCount = 0;
+  rankingScore = 0;
+  scoreSaved = false;
+  itemCounts = { '速': 0, '守': 0, '時': 0, '福': 0, '磁': 0, '休': 0 };
+  saveScoreButton.disabled = false;
+  saveMessage.textContent = '최고 콤보가 높을수록 랭킹 점수가 크게 올라갑니다.';
+  itemChain.textContent = '아이템을 연속으로 모으면 한자 조합 발동!';
+  itemChain.classList.remove('ready');
   currentPhase = PHASES[0];
   phaseBadge.innerHTML = '<span lang="ja">朝</span> MORNING';
   canvasWrap.classList.remove('rush');
@@ -161,10 +187,24 @@ function spawnObject(objectLane, type, data) {
   });
 }
 
+function getSpawnItem() {
+  if (recentItem && elapsed - recentItem.time <= COMBO_WINDOW && Math.random() < .38) {
+    const comboPartners = {
+      '速': ['速', '時'],
+      '時': ['速'],
+      '守': ['守'],
+      '福': ['福']
+    };
+    const partners = comboPartners[recentItem.kanji];
+    if (partners) return randomFrom(ITEMS.filter((item) => partners.includes(item.kanji)));
+  }
+  return randomFrom(ITEMS);
+}
+
 function spawnWave() {
   const progress = elapsed / GAME_DURATION;
-  if (Math.random() < .2) {
-    spawnObject(Math.floor(Math.random() * 3), 'item', randomFrom(ITEMS));
+  if (Math.random() < .24) {
+    spawnObject(Math.floor(Math.random() * 3), 'item', getSpawnItem());
     return;
   }
 
@@ -185,49 +225,112 @@ function addParticle(x, y, text, color, size = 18) {
   particles.push({ x, y, text, color, size, life: 1, velocity: 42 + Math.random() * 20 });
 }
 
+function activateRush(duration = 5, label = '疾風 MODE!') {
+  rushMeter = 0;
+  rushUntil = Math.max(rushUntil, elapsed + duration);
+  addParticle(playerX, 350, label, '#ffd34e', 25);
+  announce(`${label} 발동! ${duration}초 동안 점수가 두 배입니다.`);
+}
+
 function addRush(amount) {
   if (rushUntil > elapsed) return;
   rushMeter = Math.min(100, rushMeter + amount);
-  if (rushMeter >= 100) {
-    rushMeter = 0;
-    rushUntil = elapsed + 5;
-    addParticle(playerX, 350, '疾風 MODE!', '#ffd34e', 25);
-    announce('질풍 모드 발동! 5초 동안 점수가 두 배입니다.');
-  }
+  if (rushMeter >= 100) activateRush();
 }
 
 function scoreMultiplier() {
   return rushUntil > elapsed ? 2 : 1;
 }
 
+function triggerItemCombo(first, second) {
+  let comboName = '';
+  if (first === '速' && second === '速') {
+    comboName = '神速';
+    activateRush(7, '神速 COMBO!');
+    score += 500;
+  } else if ((first === '時' && second === '速') || (first === '速' && second === '時')) {
+    comboName = '時速';
+    slowUntil = Math.max(slowUntil, elapsed + 6);
+    activateRush(5, '時速 COMBO!');
+    score += 350;
+  } else if (first === '守' && second === '守') {
+    comboName = '鉄壁';
+    shieldCharges = 3;
+    score += 300;
+    addParticle(playerX, 350, '鉄壁 COMBO!', '#9ed9ff', 25);
+    announce('철벽 조합! 충돌을 세 번 막아냅니다.');
+  } else if (first === '福' && second === '福') {
+    comboName = '大福';
+    score += 1200 * scoreMultiplier();
+    addParticle(playerX, 350, '大福 +1200!', '#ffe08a', 25);
+    announce('대복 조합! 대량의 보너스 점수를 획득했습니다.');
+  }
+
+  if (!comboName) return false;
+  itemComboCount += 1;
+  itemChain.textContent = `${first} + ${second} = ${comboName} 발동!`;
+  itemChain.classList.add('ready');
+  return true;
+}
+
+function clearVisibleObstacles() {
+  const targets = objects.filter((object) => object.type === 'obstacle' && !object.remove);
+  for (const target of targets) {
+    target.remove = true;
+    addParticle(target.x, target.y, '休', '#a8f0d9', 20);
+  }
+  score += Math.max(100, targets.length * 90) * scoreMultiplier();
+  announce(`휴식 아이템! 장애물 ${targets.length}개를 정리했습니다.`);
+}
+
 function collectItem(object) {
   object.remove = true;
-  itemCounts[object.data.kanji] += 1;
-  addParticle(object.x, object.y, `${object.data.kanji}!`, object.data.glow, 26);
+  const kanji = object.data.kanji;
+  itemCounts[kanji] += 1;
+  addParticle(object.x, object.y, `${kanji}!`, object.data.glow, 26);
 
-  if (object.data.kanji === '速') {
-    addRush(38);
+  if (kanji === '速') {
+    addRush(34);
     score += 120 * scoreMultiplier();
     announce('속 아이템! 질풍 게이지가 올랐습니다.');
-  } else if (object.data.kanji === '守') {
-    if (shield) score += 200 * scoreMultiplier();
-    shield = true;
-    announce('수 아이템! 장애물을 한 번 막아냅니다.');
-  } else if (object.data.kanji === '時') {
+  } else if (kanji === '守') {
+    shieldCharges = Math.min(3, shieldCharges + 1);
+    announce(`수 아이템! 방어막 ${shieldCharges}개를 보유했습니다.`);
+  } else if (kanji === '時') {
     slowUntil = Math.max(slowUntil, elapsed + 4);
     announce('시 아이템! 4초 동안 장애물이 느려집니다.');
-  } else {
+  } else if (kanji === '福') {
     score += 350 * scoreMultiplier();
     announce('복 아이템! 보너스 점수를 얻었습니다.');
+  } else if (kanji === '磁') {
+    magnetUntil = Math.max(magnetUntil, elapsed + 6);
+    announce('자석 아이템! 6초 동안 모든 아이템을 끌어당깁니다.');
+  } else if (kanji === '休') {
+    clearVisibleObstacles();
+  }
+
+  const comboTriggered = recentItem && elapsed - recentItem.time <= COMBO_WINDOW
+    ? triggerItemCombo(recentItem.kanji, kanji)
+    : false;
+
+  if (comboTriggered) {
+    recentItem = null;
+  } else {
+    recentItem = { kanji, time: elapsed };
+    const hints = { '速': '速 또는 時', '時': '速', '守': '守', '福': '福' };
+    itemChain.textContent = hints[kanji]
+      ? `${kanji} 획득 · 7초 안에 ${hints[kanji]}을 모아 조합!`
+      : `${kanji} 아이템 발동!`;
+    itemChain.classList.add('ready');
   }
 }
 
 function hitObstacle(object) {
   object.remove = true;
-  if (shield) {
-    shield = false;
-    addParticle(playerX, 380, 'BLOCK!', '#9ed9ff', 23);
-    announce('방어막으로 장애물을 막았습니다.');
+  if (shieldCharges > 0) {
+    shieldCharges -= 1;
+    addParticle(playerX, 380, `BLOCK ×${shieldCharges}`, '#9ed9ff', 23);
+    announce(`방어막으로 장애물을 막았습니다. 남은 방어막 ${shieldCharges}개.`);
     return;
   }
 
@@ -260,6 +363,9 @@ function updateObjects(delta) {
 
   for (const object of objects) {
     object.y += speed * delta;
+    if (object.type === 'item' && magnetUntil > elapsed && object.y > 120) {
+      object.x += (playerX - object.x) * Math.min(1, delta * 5.5);
+    }
     object.spin += delta * 2.4;
 
     if (!object.remove && overlaps(object)) {
@@ -315,6 +421,11 @@ function updateHud() {
   rushBar.style.width = `${meterValue}%`;
   rushTrack.setAttribute('aria-valuenow', Math.round(meterValue));
   rushStatus.textContent = rushActive ? `疾風 MODE · ${rushRemaining.toFixed(1)}초 · 점수 ×2` : '회피하고 速을 모으세요';
+  if (recentItem && elapsed - recentItem.time > COMBO_WINDOW) {
+    recentItem = null;
+    itemChain.textContent = '조합 시간이 끝났어요. 다음 아이템을 노려보세요!';
+    itemChain.classList.remove('ready');
+  }
 }
 
 function updateGame(delta) {
@@ -372,13 +483,20 @@ function drawBackground() {
   const buildingOffset = (elapsed * 8) % 70;
   for (let x = -70 - buildingOffset; x < 790; x += 70) {
     const buildingHeight = 45 + ((Math.floor((x + buildingOffset) / 70) * 29 + 60) % 70);
-    context.fillRect(x, 185 - buildingHeight, 52, buildingHeight);
+    const buildingTop = 185 - buildingHeight;
+    context.fillStyle = currentPhase.city;
+    context.fillRect(x, buildingTop, 52, buildingHeight);
+
+    context.save();
+    context.beginPath();
+    context.rect(x, buildingTop, 52, buildingHeight);
+    context.clip();
     context.fillStyle = 'rgba(255, 224, 138, .55)';
-    for (let wy = 157 - buildingHeight; wy < 170; wy += 18) {
+    for (let wy = buildingTop + 12; wy < 176; wy += 18) {
       context.fillRect(x + 10, wy, 7, 7);
       context.fillRect(x + 30, wy, 7, 7);
     }
-    context.fillStyle = currentPhase.city;
+    context.restore();
   }
 }
 
@@ -521,7 +639,7 @@ function drawPlayer() {
   context.font = '900 17px "Noto Sans JP", sans-serif';
   context.fillText('走', playerX, 400);
 
-  if (shield) {
+  if (shieldCharges > 0) {
     context.strokeStyle = '#9ed9ff';
     context.lineWidth = 5;
     context.shadowColor = '#9ed9ff';
@@ -529,6 +647,10 @@ function drawPlayer() {
     context.beginPath();
     context.arc(playerX, 398, 46, 0, Math.PI * 2);
     context.stroke();
+    context.shadowColor = 'transparent';
+    context.fillStyle = '#ffffff';
+    context.font = '900 12px "Noto Sans JP", sans-serif';
+    context.fillText(`守×${shieldCharges}`, playerX + 35, 367);
   }
   context.restore();
 }
@@ -593,11 +715,86 @@ function gameLoop(now) {
   }
 }
 
+function calculateRankingScore(completed) {
+  return Math.floor(score) + bestCombo * 180 + itemComboCount * 250 + (completed ? 1000 : 0);
+}
+
+function getLeaderboard() {
+  try {
+    const entries = JSON.parse(localStorage.getItem(LEADERBOARD_KEY) || '[]');
+    if (!Array.isArray(entries)) return [];
+    return entries
+      .filter((entry) => entry && typeof entry.name === 'string' && Number.isFinite(entry.rankingScore))
+      .sort((a, b) => b.rankingScore - a.rankingScore || b.bestCombo - a.bestCombo)
+      .slice(0, 10);
+  } catch {
+    return [];
+  }
+}
+
+function renderLeaderboard(listElement, entries = getLeaderboard()) {
+  listElement.replaceChildren();
+  if (entries.length === 0) {
+    const empty = document.createElement('li');
+    empty.className = 'empty';
+    empty.textContent = '아직 기록이 없습니다. 첫 러너가 되어 보세요!';
+    listElement.append(empty);
+    return;
+  }
+
+  entries.slice(0, 5).forEach((entry) => {
+    const item = document.createElement('li');
+    const name = document.createElement('strong');
+    const points = document.createElement('b');
+    const comboValue = document.createElement('em');
+    name.textContent = entry.name;
+    points.textContent = `${entry.rankingScore.toLocaleString('ko-KR')} P`;
+    comboValue.textContent = `${entry.bestCombo} COMBO`;
+    item.append(name, points, comboValue);
+    listElement.append(item);
+  });
+}
+
+function refreshLeaderboards() {
+  const entries = getLeaderboard();
+  renderLeaderboard(startLeaderboard, entries);
+  renderLeaderboard(resultLeaderboard, entries);
+}
+
+function saveLeaderboardScore() {
+  if (scoreSaved || status !== 'finished') return;
+  const name = playerName.value.trim().slice(0, 12) || 'RUNNER';
+  const entry = {
+    name,
+    rankingScore,
+    gameScore: Math.floor(score),
+    bestCombo,
+    itemCombos: itemComboCount,
+    createdAt: Date.now()
+  };
+
+  try {
+    const entries = [...getLeaderboard(), entry]
+      .sort((a, b) => b.rankingScore - a.rankingScore || b.bestCombo - a.bestCombo)
+      .slice(0, 10);
+    localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(entries));
+    scoreSaved = true;
+    saveScoreButton.disabled = true;
+    const position = entries.findIndex((saved) => saved.createdAt === entry.createdAt) + 1;
+    saveMessage.textContent = position > 0 && position <= 5
+      ? `기록 완료! 로컬 리더보드 ${position}위입니다.`
+      : '기록 완료! 더 높은 콤보로 TOP 5에 도전하세요.';
+    refreshLeaderboards();
+  } catch {
+    saveMessage.textContent = '이 브라우저에서는 기록을 저장할 수 없습니다.';
+  }
+}
+
 function getRank(completed) {
   if (!completed) return '내일은 더 민첩하게';
-  if (score >= 7000) return '疾風의 하루 지배자';
-  if (score >= 4800) return '번개 출근 마스터';
-  if (score >= 3000) return '민첩한 하루 생존자';
+  if (rankingScore >= 9500) return '疾風의 하루 지배자';
+  if (rankingScore >= 6500) return '번개 출근 마스터';
+  if (rankingScore >= 4200) return '민첩한 하루 생존자';
   return '무사 완주 러너';
 }
 
@@ -614,21 +811,25 @@ function finishGame(completed) {
   resultMessage.textContent = completed
     ? '쏟아지는 일정을 피하고 아침부터 밤까지 민첩하게 돌파했습니다.'
     : '장애물에 세 번 부딪혔습니다. 다음 하루에는 더 멀리 달려 보세요.';
+  rankingScore = calculateRankingScore(completed);
   finalScore.textContent = Math.floor(score).toLocaleString('ko-KR');
   rank.textContent = getRank(completed);
   distance.textContent = `${progress}%`;
   dodgedDisplay.textContent = dodged;
   bestComboDisplay.textContent = bestCombo;
+  rankingScoreDisplay.textContent = rankingScore.toLocaleString('ko-KR');
   itemResult.replaceChildren();
   const label = document.createElement('strong');
-  label.textContent = '모은 아이템 · ';
-  itemResult.append(label, `速 ${itemCounts['速']} · 守 ${itemCounts['守']} · 時 ${itemCounts['時']} · 福 ${itemCounts['福']}`);
+  label.textContent = `아이템 조합 ${itemComboCount}회 · `;
+  itemResult.append(label, `速 ${itemCounts['速']} · 守 ${itemCounts['守']} · 時 ${itemCounts['時']} · 福 ${itemCounts['福']} · 磁 ${itemCounts['磁']} · 休 ${itemCounts['休']}`);
+  refreshLeaderboards();
   showScreen(resultScreen);
   restartButton.focus();
 }
 
 startButton.addEventListener('click', startGame);
 restartButton.addEventListener('click', startGame);
+saveScoreButton.addEventListener('click', saveLeaderboardScore);
 moveLeftButton.addEventListener('click', () => moveLane(-1));
 moveRightButton.addEventListener('click', () => moveLane(1));
 canvas.addEventListener('pointerdown', (event) => {
@@ -648,3 +849,5 @@ document.addEventListener('keydown', (event) => {
     lane = Number(event.key) - 1;
   }
 });
+
+refreshLeaderboards();

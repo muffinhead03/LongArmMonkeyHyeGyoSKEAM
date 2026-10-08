@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="430" viewBox="0 0 920 430" role="img" aria-labelledby="title desc">
+  <title id="title">Agile Day Rush</title>
+  <desc id="desc">A three-lane arcade runner dodging daily obstacles and collecting power items</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#72c4df"/><stop offset=".55" stop-color="#f5c778"/><stop offset="1" stop-color="#ec7d5f"/></linearGradient>
+    <linearGradient id="road" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#35514d"/><stop offset="1" stop-color="#172d2a"/></linearGradient>
+    <linearGradient id="rush" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#f17b45"/><stop offset="1" stop-color="#ffd34e"/></linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="180%"><feDropShadow dx="0" dy="10" stdDeviation="9" flood-color="#102f2a" flood-opacity=".35"/></filter>
+    <filter id="glow" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="9" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <clipPath id="round"><rect width="920" height="430" rx="26"/></clipPath>
+  </defs>
+  <g clip-path="url(#round)">
+    <rect width="920" height="430" fill="url(#sky)"/>
+    <circle cx="744" cy="82" r="44" fill="#ffd34e" opacity=".95"/>
+    <g fill="#49635d"><path d="M0 155h76v-73h52v73h55V55h68v100h48v-52h67v52h58V68h75v87h53v-48h65v48h61V48h72v107h51v-69h68v69h81v65H0z"/></g>
+    <g fill="#ffe08a" opacity=".7"><path d="M199 75h12v12h-12zm25 0h12v12h-12zm-25 25h12v12h-12zm25 0h12v12h-12zM453 92h12v12h-12zm26 0h12v12h-12zm-26 26h12v12h-12zm26 0h12v12h-12zM696 70h12v12h-12zm27 0h12v12h-12zm-27 27h12v12h-12zm27 0h12v12h-12z"/></g>
+    <path d="M215 155h490l145 275H70z" fill="url(#road)"/>
+    <path d="M378 155 337 430M542 155l41 275" stroke="#fff" stroke-opacity=".45" stroke-width="7" stroke-dasharray="30 24"/>
+    <g opacity=".32" stroke="#fff" stroke-width="4"><path d="m53 64 132 18M22 105l144 10M773 191l125-18M790 222l117-9"/></g>
+
+    <g transform="translate(642 250) rotate(4)" filter="url(#shadow)">
+      <rect x="-62" y="-42" width="124" height="84" rx="15" fill="#d84f47" stroke="#8d292d" stroke-width="6"/>
+      <text y="3" text-anchor="middle" fill="#fff" font-family="DejaVu Sans,sans-serif" font-size="29" font-weight="900">DUE!</text>
+      <text y="27" text-anchor="middle" fill="#fff" opacity=".75" font-family="DejaVu Sans,sans-serif" font-size="10" font-weight="700">DEADLINE</text>
+    </g>
+    <g transform="translate(279 215) rotate(-5)" filter="url(#shadow)">
+      <rect x="-52" y="-36" width="104" height="72" rx="14" fill="#775886" stroke="#493552" stroke-width="6"/>
+      <text y="4" text-anchor="middle" fill="#fff" font-family="DejaVu Sans,sans-serif" font-size="25" font-weight="900">MEET</text>
+      <text y="25" text-anchor="middle" fill="#fff" opacity=".75" font-family="DejaVu Sans,sans-serif" font-size="9" font-weight="700">MEETING</text>
+    </g>
+
+    <g transform="translate(475 230)" filter="url(#glow)">
+      <circle r="43" fill="#ffd34e" opacity=".4"/><circle r="31" fill="#f17b45" stroke="#fff" stroke-width="4"/>
+      <text y="7" text-anchor="middle" fill="#fff" font-family="DejaVu Sans,sans-serif" font-size="18" font-weight="900">SPD</text>
+    </g>
+    <g transform="translate(747 335)" filter="url(#glow)">
+      <circle r="36" fill="#9ed9ff" opacity=".42"/><circle r="26" fill="#4189c7" stroke="#fff" stroke-width="4"/>
+      <text y="6" text-anchor="middle" fill="#fff" font-family="DejaVu Sans,sans-serif" font-size="15" font-weight="900">SHD</text>
+    </g>
+
+    <g transform="translate(455 335)" filter="url(#shadow)">
+      <ellipse cy="62" rx="45" ry="12" fill="#000" opacity=".25"/>
+      <path d="M-7 27-28 62M9 27l28 35M-19-4l-32 32M19-4l35 28" fill="none" stroke="#102f2a" stroke-width="13" stroke-linecap="round"/>
+      <rect x="-31" y="-32" width="62" height="68" rx="16" fill="#176b50" stroke="#102f2a" stroke-width="5"/>
+      <circle cy="-49" r="27" fill="#f2bd8f" stroke="#102f2a" stroke-width="5"/>
+      <path d="M-31-58h62v11h-62z" fill="#ffd34e"/>
+      <text y="8" text-anchor="middle" fill="#fff" font-family="DejaVu Sans,sans-serif" font-size="15" font-weight="900">RUN</text>
+      <path d="M-58 9h-67M-62 30h-92M58 9h67M62 30h92" stroke="#ffd34e" stroke-width="7" stroke-linecap="round" opacity=".85"/>
+    </g>
+
+    <g transform="translate(46 42)">
+      <rect width="448" height="127" rx="18" fill="#102f2a" opacity=".94"/>
+      <rect x="18" y="18" width="58" height="58" rx="11" fill="none" stroke="#ffd34e" stroke-width="3"/>
+      <text x="47" y="59" text-anchor="middle" fill="#ffd34e" font-family="DejaVu Sans,sans-serif" font-size="34" font-weight="900">R</text>
+      <text x="93" y="49" fill="#ffd34e" font-family="DejaVu Sans,sans-serif" font-size="28" font-weight="900">RUSH!</text>
+      <text x="93" y="84" fill="#fff" font-family="DejaVu Sans,sans-serif" font-size="36" font-weight="900">AGILE DAY</text>
+      <text x="20" y="110" fill="#b9d2c6" font-family="DejaVu Sans,sans-serif" font-size="13" font-weight="700" letter-spacing="3">ICHINICHI DASH · ARCADE RUNNER</text>
+    </g>
+
+    <g transform="translate(48 352)">
+      <rect width="310" height="48" rx="24" fill="#102f2a" opacity=".9"/>
+      <text x="155" y="31" text-anchor="middle" fill="#fff" font-family="DejaVu Sans,sans-serif" font-size="15" font-weight="700">DODGE · COLLECT · SURVIVE!</text>
+    </g>
+    <g transform="translate(604 54)">
+      <rect width="236" height="42" rx="21" fill="url(#rush)" stroke="#102f2a" stroke-width="3"/>
+      <text x="118" y="28" text-anchor="middle" fill="#102f2a" font-family="DejaVu Sans,sans-serif" font-size="15" font-weight="900">RUSH MODE · SCORE ×2</text>
+    </g>
+  </g>
+</svg>
