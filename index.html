@@ -27,9 +27,18 @@
       <p class="intro">출근길부터 야근까지 쏟아지는 일정과 돌발 상황을 피하세요. 시간이 흐를수록 하루는 더 빠르고 정신없어집니다.</p>
 
       <div class="goal-grid" aria-label="게임 목표">
-        <div><span class="goal-icon dodge" aria-hidden="true">!</span><strong>장애물 회피</strong><small>회의·마감·비·정체를 피하기</small></div>
-        <div><span class="goal-icon collect" aria-hidden="true">速</span><strong>한자 아이템</strong><small>자동 발동하는 능력 모으기</small></div>
-        <div><span class="goal-icon finish" aria-hidden="true">夜</span><strong>40초 완주</strong><small>아침부터 밤까지 살아남기</small></div>
+        <div><span class="goal-icon dodge" aria-hidden="true">!</span><strong>상황별 대응</strong><small>출근·업무·선택·막차 돌파</small></div>
+        <div><span class="goal-icon collect" aria-hidden="true">速</span><strong>한자 아이템</strong><small>조합 능력으로 위기 극복</small></div>
+        <div><span class="goal-icon finish" aria-hidden="true">夜</span><strong>나만의 엔딩</strong><small>플레이에 따라 결말 변화</small></div>
+      </div>
+      <div class="stage-flow" aria-label="하루 스테이지">
+        <span><b lang="ja">朝</b> 출근길 회피</span>
+        <i>→</i>
+        <span><b lang="ja">昼</b> 업무 처리</span>
+        <i>→</i>
+        <span><b lang="ja">夕</b> 경로 선택</span>
+        <i>→</i>
+        <span><b lang="ja">夜</b> 막차 러시</span>
       </div>
 
       <div class="item-guide" aria-label="한자 아이템 안내">
@@ -86,7 +95,11 @@
       <div id="canvas-wrap" class="canvas-wrap">
         <canvas id="game-canvas" width="720" height="480" role="img" aria-label="세 개의 길을 오가며 장애물을 피하고 한자 아이템을 모으는 게임"></canvas>
         <div id="countdown" class="countdown" aria-hidden="true">3</div>
-        <div id="phase-badge" class="phase-badge"><span lang="ja">朝</span> MORNING</div>
+        <div id="event-banner" class="event-banner" hidden>
+          <strong id="event-title">EVENT</strong>
+          <span id="event-description">돌발 상황 발생!</span>
+        </div>
+        <div id="phase-badge" class="phase-badge"><span lang="ja">朝</span> COMMUTE</div>
         <p id="game-announcement" class="sr-only" aria-live="polite"></p>
       </div>
 

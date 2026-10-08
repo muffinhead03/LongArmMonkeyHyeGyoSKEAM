@@ -426,3 +426,59 @@ footer strong { color: var(--yellow); }
   .score-form { grid-template-columns: auto 1fr; }
   .score-form button { grid-column: 1 / -1; }
 }
+
+/* Four-part day flow and random event presentation */
+.stage-flow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: -7px 0 14px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  color: var(--ink-soft);
+  background: #eaf1e5;
+  font-size: 9px;
+  font-weight: 700;
+}
+.stage-flow span { white-space: nowrap; }
+.stage-flow b { margin-right: 2px; color: var(--orange); font-family: "Noto Sans JP", sans-serif; font-size: 13px; }
+.stage-flow i { color: #93a99b; font-style: normal; }
+
+.event-banner {
+  position: absolute;
+  z-index: 5;
+  top: 46px;
+  left: 50%;
+  width: min(84%, 430px);
+  padding: 10px 15px;
+  border: 3px solid var(--ink);
+  border-radius: 11px;
+  color: var(--ink);
+  background: var(--yellow);
+  box-shadow: 0 6px 0 rgba(16,47,42,.42);
+  text-align: center;
+  transform: translateX(-50%);
+  animation: eventDrop .25s ease-out;
+  pointer-events: none;
+}
+.event-banner strong, .event-banner span { display: block; }
+.event-banner strong { font-size: 14px; }
+.event-banner span { margin-top: 2px; font-size: 9px; font-weight: 700; }
+.event-banner.danger { color: white; background: var(--red); }
+.event-banner.bonus { background: #9ed9ff; }
+.event-banner.choice { background: var(--yellow); }
+
+@keyframes eventDrop {
+  from { opacity: 0; transform: translate(-50%, -18px) scale(.94); }
+  to { opacity: 1; transform: translate(-50%, 0) scale(1); }
+}
+
+@media (max-width: 620px) {
+  .stage-flow { flex-wrap: wrap; gap: 3px 6px; }
+  .event-banner { top: 38px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .event-banner { animation: none; }
+}

@@ -3,11 +3,18 @@ const MAX_LIVES = 3;
 const LANES = [180, 360, 540];
 
 const OBSTACLES = [
-  { kanji: '会議', caption: 'MEETING', color: '#d84f47', accent: '#8d292d', width: 94, height: 62 },
-  { kanji: '締切', caption: 'DEADLINE', color: '#e8733f', accent: '#9a3d27', width: 88, height: 68 },
-  { kanji: '渋滞', caption: 'TRAFFIC', color: '#b94e58', accent: '#752d36', width: 98, height: 58 },
-  { kanji: '雨', caption: 'RAIN', color: '#4189c7', accent: '#245981', width: 72, height: 72 },
-  { kanji: '残業', caption: 'OVERTIME', color: '#775886', accent: '#493552', width: 94, height: 64 }
+  { stages: ['commute'], kanji: '寝坊', caption: 'OVERSLEPT', color: '#d84f47', accent: '#8d292d', width: 94, height: 62 },
+  { stages: ['commute'], kanji: '満員', caption: 'CROWDED', color: '#b94e58', accent: '#752d36', width: 94, height: 64 },
+  { stages: ['commute', 'route'], kanji: '雨', caption: 'RAIN', color: '#4189c7', accent: '#245981', width: 72, height: 72 },
+  { stages: ['commute', 'route', 'lastTrain'], kanji: '渋滞', caption: 'TRAFFIC', color: '#b94e58', accent: '#752d36', width: 98, height: 58 },
+  { stages: ['office'], kanji: '会議', caption: 'MEETING', color: '#775886', accent: '#493552', width: 94, height: 64 },
+  { stages: ['office', 'lastTrain'], kanji: '締切', caption: 'DEADLINE', color: '#e8733f', accent: '#9a3d27', width: 88, height: 68 },
+  { stages: ['office'], kanji: '電話', caption: 'CALL', color: '#3c7f8c', accent: '#24515a', width: 82, height: 66 },
+  { stages: ['office'], kanji: '書類', caption: 'PAPERWORK', color: '#a16a46', accent: '#69432d', width: 94, height: 62 },
+  { stages: ['route', 'lastTrain'], kanji: '残業', caption: 'OVERTIME', color: '#775886', accent: '#493552', width: 94, height: 64 },
+  { stages: ['route'], kanji: '疲労', caption: 'FATIGUE', color: '#5e7187', accent: '#384654', width: 88, height: 66 },
+  { stages: ['lastTrain'], kanji: '終電', caption: 'LAST TRAIN', color: '#d84f47', accent: '#8d292d', width: 100, height: 66 },
+  { stages: ['lastTrain'], kanji: '眠気', caption: 'SLEEPY', color: '#526b91', accent: '#30405a', width: 88, height: 68 }
 ];
 
 const ITEMS = [
@@ -19,14 +26,27 @@ const ITEMS = [
   { kanji: '休', name: '휴식', color: '#359b83', glow: '#a8f0d9' }
 ];
 
+const ROUTE_CHOICES = [
+  { kanji: '近道', caption: '지름길', color: '#d84f47', description: '고득점 · 위험 증가' },
+  { kanji: '休憩', caption: '잠깐 휴식', color: '#359b83', description: '기회 · 방어 회복' },
+  { kanji: '残業', caption: '야근 도전', color: '#775886', description: '큰 점수 · 난이도 상승' }
+];
+
 const COMBO_WINDOW = 7;
 const LEADERBOARD_KEY = 'ichinichi-dash-leaderboard-v1';
 
 const PHASES = [
-  { from: 0, name: 'MORNING', kanji: '朝', top: '#78c5e1', bottom: '#f9ddb0', city: '#6c887e' },
-  { from: .28, name: 'DAYTIME', kanji: '昼', top: '#66b7dd', bottom: '#d9efc6', city: '#5f8172' },
-  { from: .62, name: 'EVENING', kanji: '夕', top: '#ef8f66', bottom: '#f8d899', city: '#5f5d68' },
-  { from: .84, name: 'NIGHT', kanji: '夜', top: '#24365f', bottom: '#735c88', city: '#273640' }
+  { from: 0, key: 'commute', name: 'COMMUTE', kanji: '朝', top: '#78c5e1', bottom: '#f9ddb0', city: '#6c887e' },
+  { from: .28, key: 'office', name: 'OFFICE', kanji: '昼', top: '#bad8cb', bottom: '#f3e7c1', city: '#5f8172' },
+  { from: .62, key: 'route', name: 'CHOOSE ROUTE', kanji: '夕', top: '#ef8f66', bottom: '#f8d899', city: '#5f5d68' },
+  { from: .84, key: 'lastTrain', name: 'LAST TRAIN', kanji: '夜', top: '#24365f', bottom: '#735c88', city: '#273640' }
+];
+
+const RANDOM_EVENTS = [
+  { kanji: '寝坊', title: '늦잠!', description: '5초 동안 일정이 더 빠르게 몰려옵니다.', tone: 'danger', apply: () => { hardModeUntil = Math.max(hardModeUntil, elapsed + 5); } },
+  { kanji: '雨', title: '갑작스러운 비!', description: '5초 동안 이동이 미끄러워집니다.', tone: 'danger', apply: () => { slipperyUntil = Math.max(slipperyUntil, elapsed + 5); } },
+  { kanji: '早退', title: '뜻밖의 조기 퇴근!', description: '점수와 질풍 게이지를 획득합니다.', tone: 'bonus', apply: () => { score += 500; addRush(30); } },
+  { kanji: '休憩', title: '잠깐의 휴식!', description: '기회와 방어막을 하나 회복합니다.', tone: 'bonus', apply: () => { lives = Math.min(MAX_LIVES, lives + 1); shieldCharges = Math.min(3, shieldCharges + 1); } }
 ];
 
 const startScreen = document.querySelector('#start-screen');
@@ -48,6 +68,9 @@ const itemChain = document.querySelector('#item-chain');
 const canvasWrap = document.querySelector('#canvas-wrap');
 const canvas = document.querySelector('#game-canvas');
 const countdown = document.querySelector('#countdown');
+const eventBanner = document.querySelector('#event-banner');
+const eventTitle = document.querySelector('#event-title');
+const eventDescription = document.querySelector('#event-description');
 const phaseBadge = document.querySelector('#phase-badge');
 const announcement = document.querySelector('#game-announcement');
 const resultKicker = document.querySelector('#result-kicker');
@@ -88,6 +111,13 @@ let rushUntil = 0;
 let slowUntil = 0;
 let shieldCharges = 0;
 let magnetUntil = 0;
+let hardModeUntil = 0;
+let slipperyUntil = 0;
+let randomEventIndex = 0;
+let eventDeck = [];
+let routeChoiceTriggered = false;
+let choiceGateActive = false;
+let eventHideTimer = null;
 let invincibleUntil = 0;
 let shakeUntil = 0;
 let recentItem = null;
@@ -140,6 +170,14 @@ function startGame() {
   slowUntil = 0;
   shieldCharges = 0;
   magnetUntil = 0;
+  hardModeUntil = 0;
+  slipperyUntil = 0;
+  randomEventIndex = 0;
+  eventDeck = shuffled(RANDOM_EVENTS);
+  routeChoiceTriggered = false;
+  choiceGateActive = false;
+  window.clearTimeout(eventHideTimer);
+  eventBanner.hidden = true;
   invincibleUntil = 0;
   shakeUntil = 0;
   recentItem = null;
@@ -152,7 +190,7 @@ function startGame() {
   itemChain.textContent = '아이템을 연속으로 모으면 한자 조합 발동!';
   itemChain.classList.remove('ready');
   currentPhase = PHASES[0];
-  phaseBadge.innerHTML = '<span lang="ja">朝</span> MORNING';
+  phaseBadge.innerHTML = '<span lang="ja">朝</span> COMMUTE';
   canvasWrap.classList.remove('rush');
   countdown.hidden = false;
   countdown.classList.remove('go');
@@ -179,8 +217,8 @@ function spawnObject(objectLane, type, data) {
     y: -65,
     type,
     data,
-    width: type === 'obstacle' ? data.width : 54,
-    height: type === 'obstacle' ? data.height : 54,
+    width: type === 'obstacle' ? data.width : type === 'gate' ? 150 : 54,
+    height: type === 'obstacle' ? data.height : type === 'gate' ? 82 : 54,
     passed: false,
     remove: false,
     spin: Math.random() * Math.PI * 2
@@ -209,10 +247,66 @@ function spawnWave() {
   }
 
   const laneOrder = shuffled([0, 1, 2]);
-  const obstacleCount = progress > .28 && Math.random() < (.18 + progress * .24) ? 2 : 1;
+  const stageObstacles = OBSTACLES.filter((obstacle) => obstacle.stages.includes(currentPhase.key));
+  const pressure = currentPhase.key === 'lastTrain' || hardModeUntil > elapsed;
+  const obstacleCount = pressure || (progress > .28 && Math.random() < (.18 + progress * .24)) ? 2 : 1;
   for (let index = 0; index < obstacleCount; index += 1) {
-    spawnObject(laneOrder[index], 'obstacle', randomFrom(OBSTACLES));
+    spawnObject(laneOrder[index], 'obstacle', randomFrom(stageObstacles));
   }
+}
+
+function showRandomEvent(event) {
+  eventTitle.textContent = `${event.kanji} · ${event.title}`;
+  eventDescription.textContent = event.description;
+  eventBanner.className = `event-banner ${event.tone}`;
+  eventBanner.hidden = false;
+  window.clearTimeout(eventHideTimer);
+  eventHideTimer = window.setTimeout(() => { eventBanner.hidden = true; }, 2400);
+  event.apply();
+  addParticle(360, 105, `${event.kanji} EVENT!`, event.tone === 'bonus' ? '#ffd34e' : '#ff9a82', 24);
+  announce(`${event.title} ${event.description}`);
+}
+
+function updateRandomEvents() {
+  const eventTimes = [8, 18];
+  if (randomEventIndex >= eventTimes.length || elapsed < eventTimes[randomEventIndex]) return;
+  showRandomEvent(eventDeck[randomEventIndex]);
+  randomEventIndex += 1;
+}
+
+function spawnRouteChoice() {
+  routeChoiceTriggered = true;
+  choiceGateActive = true;
+  objects = [];
+  ROUTE_CHOICES.forEach((choice, choiceLane) => spawnObject(choiceLane, 'gate', choice));
+  showRandomEvent({
+    kanji: '選択',
+    title: '퇴근길 선택!',
+    description: '원하는 경로의 레인으로 이동하세요.',
+    tone: 'choice',
+    apply: () => {}
+  });
+}
+
+function chooseRoute(choice) {
+  choiceGateActive = false;
+  objects.forEach((object) => {
+    if (object.type === 'gate') object.remove = true;
+  });
+
+  if (choice.kanji === '近道') {
+    score += 700 * scoreMultiplier();
+    hardModeUntil = Math.max(hardModeUntil, elapsed + 5);
+  } else if (choice.kanji === '休憩') {
+    lives = Math.min(MAX_LIVES, lives + 1);
+    shieldCharges = Math.min(3, shieldCharges + 1);
+  } else {
+    score += 1100 * scoreMultiplier();
+    hardModeUntil = Math.max(hardModeUntil, elapsed + 7);
+    addRush(35);
+  }
+  addParticle(playerX, 340, `${choice.kanji} 선택!`, '#ffd34e', 25);
+  announce(`${choice.caption} 선택! ${choice.description}`);
 }
 
 function overlaps(object) {
@@ -359,7 +453,8 @@ function passObstacle(object) {
 function updateObjects(delta) {
   const progress = elapsed / GAME_DURATION;
   const baseSpeed = 185 + progress * 235;
-  const speed = slowUntil > elapsed ? baseSpeed * .52 : baseSpeed;
+  let speed = slowUntil > elapsed ? baseSpeed * .52 : baseSpeed;
+  if (hardModeUntil > elapsed) speed *= 1.22;
 
   for (const object of objects) {
     object.y += speed * delta;
@@ -370,9 +465,13 @@ function updateObjects(delta) {
 
     if (!object.remove && overlaps(object)) {
       if (object.type === 'item') collectItem(object);
+      else if (object.type === 'gate') chooseRoute(object.data);
       else hitObstacle(object);
     }
 
+    if (object.type === 'gate' && choiceGateActive && !object.remove && object.y > 468 && object.lane === lane) {
+      chooseRoute(object.data);
+    }
     if (object.type === 'obstacle' && !object.passed && !object.remove && object.y > 470) {
       passObstacle(object);
     }
@@ -431,19 +530,24 @@ function updateHud() {
 function updateGame(delta) {
   elapsed = Math.min(GAME_DURATION, elapsed + delta);
   score += delta * 12 * scoreMultiplier();
-  playerX += (LANES[lane] - playerX) * Math.min(1, delta * 14);
+  const movementSpeed = slipperyUntil > elapsed ? 6.5 : 14;
+  playerX += (LANES[lane] - playerX) * Math.min(1, delta * movementSpeed);
+
+  updatePhase();
+  updateRandomEvents();
+  if (!routeChoiceTriggered && elapsed >= 27) spawnRouteChoice();
 
   const progress = elapsed / GAME_DURATION;
-  const spawnInterval = Math.max(.42, .9 - progress * .38);
+  let spawnInterval = Math.max(.42, .9 - progress * .38);
+  if (hardModeUntil > elapsed || currentPhase.key === 'lastTrain') spawnInterval *= .76;
   spawnAccumulator += delta;
-  if (spawnAccumulator >= spawnInterval) {
+  if (!choiceGateActive && spawnAccumulator >= spawnInterval) {
     spawnAccumulator -= spawnInterval;
     spawnWave();
   }
 
   updateObjects(delta);
   updateParticles(delta);
-  updatePhase();
   updateDayTime();
   updateHud();
 
@@ -468,39 +572,76 @@ function drawBackground() {
   context.fillStyle = gradient;
   context.fillRect(0, 0, 720, 480);
 
+  if (currentPhase.key === 'office') {
+    context.fillStyle = '#f5edcf';
+    context.fillRect(0, 118, 720, 72);
+    context.fillStyle = '#315f55';
+    context.fillRect(44, 76, 158, 12);
+    context.fillRect(518, 76, 158, 12);
+    context.fillStyle = '#ffffff';
+    for (const x of [65, 112, 159, 539, 586, 633]) context.fillRect(x, 42, 27, 34);
+    context.fillStyle = '#102f2a';
+    context.beginPath();
+    context.arc(360, 80, 36, 0, Math.PI * 2);
+    context.fill();
+    context.fillStyle = '#fffdf4';
+    context.beginPath();
+    context.arc(360, 80, 30, 0, Math.PI * 2);
+    context.fill();
+    context.strokeStyle = '#102f2a';
+    context.lineWidth = 4;
+    context.beginPath();
+    context.moveTo(360, 80);
+    context.lineTo(360, 59);
+    context.moveTo(360, 80);
+    context.lineTo(376, 88);
+    context.stroke();
+    return;
+  }
+
   const progress = elapsed / GAME_DURATION;
   const celestialX = 90 + progress * 540;
   const celestialY = 105 - Math.sin(progress * Math.PI) * 72;
   context.save();
   context.globalAlpha = .86;
-  context.fillStyle = currentPhase.name === 'NIGHT' ? '#f3f0d4' : '#ffd34e';
+  context.fillStyle = currentPhase.key === 'lastTrain' ? '#f3f0d4' : '#ffd34e';
   context.beginPath();
-  context.arc(celestialX, celestialY, currentPhase.name === 'NIGHT' ? 22 : 29, 0, Math.PI * 2);
+  context.arc(celestialX, celestialY, currentPhase.key === 'lastTrain' ? 22 : 29, 0, Math.PI * 2);
   context.fill();
   context.restore();
 
-  context.fillStyle = currentPhase.city;
+  // Solid silhouettes intentionally contain no window rectangles, preventing facade overflow.
   const buildingOffset = (elapsed * 8) % 70;
+  context.fillStyle = currentPhase.city;
   for (let x = -70 - buildingOffset; x < 790; x += 70) {
     const buildingHeight = 45 + ((Math.floor((x + buildingOffset) / 70) * 29 + 60) % 70);
     const buildingTop = 185 - buildingHeight;
-    context.fillStyle = currentPhase.city;
     context.fillRect(x, buildingTop, 52, buildingHeight);
-
-    context.save();
-    context.beginPath();
-    context.rect(x, buildingTop, 52, buildingHeight);
-    context.clip();
-    context.fillStyle = 'rgba(255, 224, 138, .55)';
-    for (let wy = buildingTop + 12; wy < 176; wy += 18) {
-      context.fillRect(x + 10, wy, 7, 7);
-      context.fillRect(x + 30, wy, 7, 7);
-    }
-    context.restore();
+    context.fillRect(x + 18, buildingTop - 7, 16, 7);
   }
 }
 
 function drawRoad() {
+  if (currentPhase.key === 'office') {
+    context.fillStyle = '#b78155';
+    context.fillRect(70, 175, 580, 305);
+    context.fillStyle = '#d5aa78';
+    context.fillRect(84, 175, 552, 305);
+    context.strokeStyle = 'rgba(72,45,29,.35)';
+    context.lineWidth = 5;
+    for (const divider of [270, 450]) {
+      context.beginPath();
+      context.moveTo(divider, 175);
+      context.lineTo(divider, 480);
+      context.stroke();
+    }
+    context.fillStyle = 'rgba(255,255,255,.12)';
+    context.fillRect(102, 190, 156, 280);
+    context.fillRect(282, 190, 156, 280);
+    context.fillRect(462, 190, 156, 280);
+    return;
+  }
+
   context.fillStyle = '#263c3a';
   context.fillRect(90, 175, 540, 305);
   context.fillStyle = '#1b2c2a';
@@ -547,6 +688,34 @@ function drawObstacle(object) {
   context.restore();
 }
 
+function drawGate(object) {
+  const { data } = object;
+  const x = object.x - object.width / 2;
+  const y = object.y - object.height / 2;
+  context.save();
+  context.shadowColor = 'rgba(0,0,0,.28)';
+  context.shadowBlur = 10;
+  context.shadowOffsetY = 5;
+  roundedRect(x, y, object.width, object.height, 12);
+  context.fillStyle = data.color;
+  context.fill();
+  context.shadowColor = 'transparent';
+  context.lineWidth = 4;
+  context.strokeStyle = '#fff3c4';
+  context.stroke();
+  context.fillStyle = '#ffffff';
+  context.textAlign = 'center';
+  context.textBaseline = 'middle';
+  context.font = '900 25px "Noto Sans JP", sans-serif';
+  context.fillText(data.kanji, object.x, object.y - 14);
+  context.font = '900 11px "Noto Sans KR", sans-serif';
+  context.fillText(data.caption, object.x, object.y + 11);
+  context.globalAlpha = .78;
+  context.font = '700 8px "Noto Sans KR", sans-serif';
+  context.fillText(data.description, object.x, object.y + 28);
+  context.restore();
+}
+
 function drawItem(object) {
   const pulse = 1 + Math.sin(object.spin * 3) * .07;
   context.save();
@@ -575,7 +744,43 @@ function drawItem(object) {
   context.restore();
 }
 
+function drawOfficePlayer() {
+  if (invincibleUntil > elapsed && Math.floor(elapsed * 12) % 2 === 0) return;
+  context.save();
+  context.fillStyle = 'rgba(0,0,0,.22)';
+  context.beginPath();
+  context.ellipse(playerX, 447, 38, 10, 0, 0, Math.PI * 2);
+  context.fill();
+  roundedRect(playerX - 38, 378, 76, 66, 13);
+  context.fillStyle = rushUntil > elapsed ? '#f17b45' : '#176b50';
+  context.fill();
+  context.lineWidth = 5;
+  context.strokeStyle = '#102f2a';
+  context.stroke();
+  roundedRect(playerX - 24, 354, 48, 30, 8);
+  context.fillStyle = '#f4d595';
+  context.fill();
+  context.stroke();
+  context.fillStyle = '#ffffff';
+  context.textAlign = 'center';
+  context.textBaseline = 'middle';
+  context.font = '900 20px "Noto Sans JP", sans-serif';
+  context.fillText('処理', playerX, 411);
+  if (shieldCharges > 0) {
+    context.strokeStyle = '#9ed9ff';
+    context.lineWidth = 5;
+    context.beginPath();
+    context.arc(playerX, 402, 51, 0, Math.PI * 2);
+    context.stroke();
+  }
+  context.restore();
+}
+
 function drawPlayer() {
+  if (currentPhase.key === 'office') {
+    drawOfficePlayer();
+    return;
+  }
   if (invincibleUntil > elapsed && Math.floor(elapsed * 12) % 2 === 0) return;
   const run = Math.sin(elapsed * 18) * 7;
   const rushActive = rushUntil > elapsed;
@@ -680,6 +885,7 @@ function drawScene() {
   drawRoad();
   for (const object of objects) {
     if (object.type === 'obstacle') drawObstacle(object);
+    else if (object.type === 'gate') drawGate(object);
     else drawItem(object);
   }
   drawPlayer();
@@ -798,19 +1004,42 @@ function getRank(completed) {
   return '무사 완주 러너';
 }
 
+function getEnding(completed) {
+  if (!completed && elapsed < GAME_DURATION * .28) {
+    return { kicker: '朝 · 출근 실패', stamp: '遅刻', title: '아침부터 꼬여버렸다!', message: '출근길 장애물을 넘지 못했습니다. 다음 하루에는 더 민첩하게 움직여 보세요.' };
+  }
+  if (!completed) {
+    return { kicker: '予定 · 일정 붕괴', stamp: '失敗', title: '하루가 너무 빨랐다!', message: '돌발 상황이 계획보다 강했습니다. 아이템 조합으로 다시 도전해 보세요.' };
+  }
+  if (lives === MAX_LIVES && bestCombo >= 25) {
+    return { kicker: 'PERFECT ENDING', stamp: '完璧', title: '완벽한 하루!', message: '한 번도 흔들리지 않고 모든 상황을 민첩하게 처리했습니다.' };
+  }
+  if (itemComboCount >= 3) {
+    return { kicker: 'KANJI COMBO ENDING', stamp: '連鎖', title: '조합의 달인!', message: '한자 아이템을 연쇄 조합해 정신없는 하루를 지배했습니다.' };
+  }
+  if (bestCombo >= 25) {
+    return { kicker: 'RUSH ENDING', stamp: '疾風', title: '바람보다 빠른 하루!', message: '긴 회피 콤보로 아침부터 막차까지 단숨에 돌파했습니다.' };
+  }
+  if (lives === 1) {
+    return { kicker: 'CLOSE CALL ENDING', stamp: '無事', title: '아슬아슬 귀가 성공!', message: '마지막 기회를 붙잡고 간신히 오늘 하루를 마쳤습니다.' };
+  }
+  return { kicker: 'NORMAL ENDING', stamp: '帰宅', title: '오늘도 무사 귀가!', message: '출근, 업무, 선택과 막차를 지나 평범하지만 소중한 하루를 완주했습니다.' };
+}
+
 function finishGame(completed) {
   if (status === 'finished') return;
   status = 'finished';
   cancelAnimationFrame(animationFrame);
+  window.clearTimeout(eventHideTimer);
+  eventBanner.hidden = true;
   const progress = Math.min(100, Math.round((elapsed / GAME_DURATION) * 100));
 
-  resultKicker.textContent = completed ? '夜 · 하루 완주!' : '遅刻 · 질주 종료!';
-  resultStamp.textContent = completed ? '完走' : '遅刻';
+  const ending = getEnding(completed);
+  resultKicker.textContent = ending.kicker;
+  resultStamp.textContent = ending.stamp;
   resultStamp.classList.toggle('fail', !completed);
-  resultTitle.textContent = completed ? '오늘도 살아남았다!' : '하루가 너무 빨랐다!';
-  resultMessage.textContent = completed
-    ? '쏟아지는 일정을 피하고 아침부터 밤까지 민첩하게 돌파했습니다.'
-    : '장애물에 세 번 부딪혔습니다. 다음 하루에는 더 멀리 달려 보세요.';
+  resultTitle.textContent = ending.title;
+  resultMessage.textContent = ending.message;
   rankingScore = calculateRankingScore(completed);
   finalScore.textContent = Math.floor(score).toLocaleString('ko-KR');
   rank.textContent = getRank(completed);
