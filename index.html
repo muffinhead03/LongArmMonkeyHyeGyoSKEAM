@@ -3,74 +3,146 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>KING 해커톤 · 배포 확인</title>
-  <style>
-    * { box-sizing: border-box; }
-    body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px; background: #eef1eb; color: #17241c; font-family: system-ui, "Malgun Gothic", sans-serif; }
-    main { width: min(100%, 720px); padding: clamp(24px, 5vw, 48px); border: 1px solid #00462a; border-radius: 8px; background: white; }
-    .label { margin: 0 0 24px; color: #00462a; font-size: 14px; font-weight: 700; }
-    h1 { margin: 0 0 16px; font-size: clamp(28px, 6vw, 42px); }
-    p { line-height: 1.7; }
-    #stage { display: grid; place-items: center; min-height: 180px; margin: 28px 0 20px; padding: 24px; background: #f3f5f1; border: 1px solid #d8ded7; text-align: center; }
-    #message { margin: 0; }
-    .buttons { display: flex; flex-wrap: wrap; gap: 12px; }
-    button { padding: 12px 20px; border: 1px solid #00462a; border-radius: 4px; background: #00462a; color: white; font: inherit; cursor: pointer; }
-    #restart { background: white; color: #00462a; }
-    button:disabled { opacity: .4; cursor: default; }
-    button:focus-visible { outline: 3px solid #69a58c; outline-offset: 4px; }
-    .guide { margin-top: 28px; padding: 24px; border: 1px solid #d8ded7; background: #f8faf6; }
-    .guide h2 { margin: 0 0 12px; font-size: 22px; }
-    .guide li { margin: 10px 0; line-height: 1.7; }
-    .sheet-link { display: inline-block; margin-top: 8px; padding: 12px 18px; background: #00462a; color: white; border-radius: 4px; text-decoration: none; }
-    .sheet-link:focus-visible { outline: 3px solid #69a58c; outline-offset: 4px; }
-    .note { margin-top: 28px; padding-top: 20px; border-top: 1px solid #d8ded7; color: #68746b; font-size: 14px; }
-  </style>
+  <meta name="theme-color" content="#102f2a">
+  <meta name="description" content="아침부터 밤까지 장애물을 피하며 질주하는 3레인 아케이드 게임">
+  <title>疾走! 민첩한 하루</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="game.js" defer></script>
 </head>
 <body>
-  <main>
-    <p class="label">KING · 바이브코딩 해커톤</p>
-    <!-- 사전 수정 연습: 아래 제목을 원하는 문구로 바꿔 보세요. -->
-    <h1>해커톤 준비 완료</h1>
-    <p>이 화면이 GitHub Pages 공개 주소에서 보이면 배포에 성공한 것입니다.<br>시작 버튼을 눌러 기본 동작도 확인해 주세요.</p>
-    <section id="stage" aria-label="실행 확인 화면" aria-live="polite">
-      <p id="message">시작 버튼을 눌러 주세요.</p>
+  <main class="game-shell">
+    <header class="game-header">
+      <div class="brand-mark" aria-hidden="true">走</div>
+      <div>
+        <p class="event-label">KING 바이브코딩 해커톤</p>
+        <h1><span lang="ja">疾走!</span> 민첩한 하루</h1>
+        <p class="japanese-title" lang="ja">一日ダッシュ · ICHINICHI DASH</p>
+      </div>
+    </header>
+
+    <section id="start-screen" class="screen start-screen" aria-labelledby="start-title">
+      <div class="speed-lines" aria-hidden="true"></div>
+      <p class="eyebrow">오늘 하루도 지각할 수 없다!</p>
+      <h2 id="start-title">피하고, 모으고,<br><em>밤까지 질주!</em></h2>
+      <p class="intro">출근길부터 야근까지 쏟아지는 일정과 돌발 상황을 피하세요. 시간이 흐를수록 하루는 더 빠르고 정신없어집니다.</p>
+
+      <div class="goal-grid" aria-label="게임 목표">
+        <div><span class="goal-icon dodge" aria-hidden="true">!</span><strong>상황별 대응</strong><small>출근·업무·선택·막차 돌파</small></div>
+        <div><span class="goal-icon collect" aria-hidden="true">速</span><strong>한자 아이템</strong><small>조합 능력으로 위기 극복</small></div>
+        <div><span class="goal-icon finish" aria-hidden="true">夜</span><strong>나만의 엔딩</strong><small>플레이에 따라 결말 변화</small></div>
+      </div>
+      <div class="stage-flow" aria-label="하루 스테이지">
+        <span><b lang="ja">朝</b> 출근길 회피</span>
+        <i>→</i>
+        <span><b lang="ja">昼</b> 업무 처리</span>
+        <i>→</i>
+        <span><b lang="ja">夕</b> 경로 선택</span>
+        <i>→</i>
+        <span><b lang="ja">夜</b> 막차 러시</span>
+      </div>
+
+      <div class="item-guide" aria-label="한자 아이템 안내">
+        <h3>街角 아이템</h3>
+        <ul>
+          <li><b class="item-speed" lang="ja">速</b><span>질풍 게이지</span></li>
+          <li><b class="item-guard" lang="ja">守</b><span>충돌 방어</span></li>
+          <li><b class="item-time" lang="ja">時</b><span>시간 감속</span></li>
+          <li><b class="item-luck" lang="ja">福</b><span>보너스 점수</span></li>
+          <li><b class="item-magnet" lang="ja">磁</b><span>아이템 자석</span></li>
+          <li><b class="item-rest" lang="ja">休</b><span>장애물 제거</span></li>
+        </ul>
+        <div class="combo-recipes">
+          <strong><span lang="ja">漢字</span> COMBO</strong>
+          <span><b>時 + 速</b> = 時速</span>
+          <span><b>速 + 速</b> = 神速</span>
+          <span><b>守 + 守</b> = 鉄壁</span>
+          <span><b>福 + 福</b> = 大福</span>
+        </div>
+      </div>
+
+      <details class="leaderboard-panel start-leaderboard" open>
+        <summary><span lang="en">LEADERBOARD</span> · 이 브라우저 TOP 5</summary>
+        <ol id="start-leaderboard"></ol>
+        <p>랭킹 점수 = 게임 점수 + 최고 콤보 보너스 + 완주 보너스</p>
+      </details>
+
+      <div class="controls-guide">
+        <div><span>키보드</span><kbd>←</kbd><kbd>→</kbd> 또는 <kbd>A</kbd><kbd>D</kbd></div>
+        <div><span>모바일</span>화면 아래 이동 버튼</div>
+      </div>
+      <button id="start-button" class="primary-button" type="button">하루 질주 시작 <span aria-hidden="true">▶</span></button>
     </section>
-    <div class="buttons">
-      <button id="start" type="button">시작</button>
-      <button id="restart" type="button" disabled>다시 시작</button>
-    </div>
-    <section class="guide" aria-labelledby="guide-title">
-      <h2 id="guide-title">참가자 정보 사전 입력</h2>
-      <p>정기 모임 전에 GitHub와 Skeam 계정을 만들고, 아래 스프레드시트에 본인 정보를 미리 기재해 주세요.</p>
-      <ol>
-        <li><strong>GitHub 계정:</strong> 계정을 생성하고 이메일 인증을 완료합니다. 공개 저장소를 만들고 이 파일을 GitHub Pages에 배포해 봅니다.</li>
-        <li><strong>Skeam 계정:</strong> 계정을 생성하고 행사에 사용할 기기에서 로그인을 확인합니다.</li>
-        <li><strong>스프레드시트:</strong> 빈 행 하나에 이름, Skeam 닉네임, 참여 여부, 사용할 AI·제작 도구를 입력합니다. 이미 본인 행이 있다면 해당 행을 수정합니다.</li>
-        <li><strong>행사 후 입력:</strong> 작품명과 Skeam 링크를 입력합니다. 아직 만들지 않은 작품 정보와 링크는 비워 두어도 됩니다.</li>
-      </ol>
-      <a class="sheet-link" href="https://docs.google.com/spreadsheets/d/1eLqrOtpMhR3VfCOIV-9_RNtlB1wUtHm_m6aK4ziDUH8/edit?usp=sharing" target="_blank" rel="noopener noreferrer">참가자 정보 입력 시트 열기 ↗</a>
-      <p style="font-size:14px;color:#68746b">다른 참가자의 행은 수정하지 마세요. 비밀번호·API 키는 기재하지 않습니다. 사전 준비·출석·제출 상태·실행 확인은 운영진이 관리합니다.</p>
+
+    <section id="game-screen" class="screen game-screen" aria-label="게임 화면" hidden>
+      <div class="hud">
+        <div><span>현재 시각</span><strong id="day-time">07:00</strong></div>
+        <div><span>점수</span><strong id="score">0</strong></div>
+        <div><span>회피 콤보</span><strong id="combo">0</strong></div>
+        <div class="lives"><span>남은 기회</span><strong id="lives" aria-label="남은 기회 3개">♥ ♥ ♥</strong></div>
+      </div>
+
+      <div id="rush-panel" class="rush-panel">
+        <div class="rush-copy">
+          <span><b lang="ja">疾風</b> 게이지</span>
+          <strong id="rush-status">회피하고 速을 모으세요</strong>
+        </div>
+        <div id="rush-track" class="rush-track" role="progressbar" aria-label="질풍 게이지" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <span id="rush-bar"></span>
+        </div>
+        <p id="item-chain" class="item-chain">아이템을 연속으로 모으면 한자 조합 발동!</p>
+      </div>
+
+      <div id="canvas-wrap" class="canvas-wrap">
+        <canvas id="game-canvas" width="720" height="480" role="img" aria-label="세 개의 길을 오가며 장애물을 피하고 한자 아이템을 모으는 게임"></canvas>
+        <div id="countdown" class="countdown" aria-hidden="true">3</div>
+        <div id="event-banner" class="event-banner" hidden>
+          <strong id="event-title">EVENT</strong>
+          <span id="event-description">돌발 상황 발생!</span>
+        </div>
+        <div id="phase-badge" class="phase-badge"><span lang="ja">朝</span> COMMUTE</div>
+        <p id="game-announcement" class="sr-only" aria-live="polite"></p>
+      </div>
+
+      <div class="touch-controls" aria-label="이동 조작">
+        <button id="move-left" type="button" aria-label="왼쪽 길로 이동"><span aria-hidden="true">←</span> 왼쪽</button>
+        <button id="move-right" type="button" aria-label="오른쪽 길로 이동">오른쪽 <span aria-hidden="true">→</span></button>
+      </div>
+      <p class="play-tip"><strong>TIP</strong> 붉은 장애물은 피하고, 빛나는 한자는 모으세요!</p>
     </section>
-    <p class="note">이 파일은 배포 연습용 기본 틀입니다. 실제 게임 규칙과 조작은 당일 추가하세요.<br>사전 연습: 제목을 수정해 다시 올린 뒤 공개 페이지에도 반영되는지 확인합니다.</p>
+
+    <section id="result-screen" class="screen result-screen" aria-labelledby="result-title" hidden>
+      <p id="result-kicker" class="eyebrow">夜 · 하루 완주!</p>
+      <div id="result-stamp" class="result-stamp" aria-hidden="true">完走</div>
+      <h2 id="result-title">오늘도 살아남았다!</h2>
+      <p id="result-message">정신없는 하루를 민첩하게 돌파했습니다.</p>
+      <div class="final-score">
+        <span>최종 점수</span>
+        <strong id="final-score">0</strong>
+        <em id="rank">민첩한 하루 생존자</em>
+      </div>
+      <div class="result-stats" aria-label="플레이 결과">
+        <div><span>하루 진행도</span><strong id="distance">100%</strong></div>
+        <div><span>피한 장애물</span><strong id="dodged">0</strong></div>
+        <div><span>최고 콤보</span><strong id="best-combo">0</strong></div>
+        <div class="ranking-stat"><span>랭킹 점수</span><strong id="ranking-score">0</strong></div>
+      </div>
+      <div id="item-result" class="item-result"></div>
+      <section class="score-submit" aria-labelledby="score-submit-title">
+        <h3 id="score-submit-title">LEADERBOARD 등록</h3>
+        <div class="score-form">
+          <label for="player-name">닉네임</label>
+          <input id="player-name" type="text" maxlength="12" value="RUNNER" autocomplete="nickname">
+          <button id="save-score" type="button">기록 저장</button>
+        </div>
+        <p id="save-message" role="status" aria-live="polite">최고 콤보가 높을수록 랭킹 점수가 크게 올라갑니다.</p>
+        <ol id="result-leaderboard" class="result-leaderboard"></ol>
+      </section>
+      <button id="restart-button" class="primary-button" type="button">내일 다시 달리기 <span aria-hidden="true">↻</span></button>
+    </section>
+
+    <footer>
+      <span>오늘도</span><strong>민첩한 하루 되세요!</strong><span lang="ja">よい一日を!</span>
+    </footer>
   </main>
-  <script>
-    // 외부 라이브러리 없이 이 파일 하나로 실행됩니다.
-    const message = document.getElementById('message');
-    const start = document.getElementById('start');
-    const restart = document.getElementById('restart');
-    start.addEventListener('click', () => {
-      message.textContent = '시작 버튼이 정상적으로 작동합니다. 다시 시작 버튼도 확인해 주세요.';
-      start.disabled = true;
-      restart.disabled = false;
-      restart.focus();
-    });
-    restart.addEventListener('click', () => {
-      message.textContent = '시작 버튼을 눌러 주세요.';
-      start.disabled = false;
-      restart.disabled = true;
-      start.focus();
-    });
-  </script>
 </body>
 </html>
-
